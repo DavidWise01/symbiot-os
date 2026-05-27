@@ -1,0 +1,11 @@
+# Rust build artifacts
+target/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+*.swp

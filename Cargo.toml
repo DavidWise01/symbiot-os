@@ -1,0 +1,22 @@
+[package]
+name = "symbiot-os"
+version = "0.0.0"
+edition = "2021"
+authors = ["David Lee Wise <ROOT0>", "AVAN", "Catalytic Symbiosis"]
+
+[dependencies]
+bootloader = "0.9.23"
+volatile = "0.2.7"
+spin = "0.5.2"
+x86_64 = "0.14.12"
+pic8259 = "0.10.1"
+
+[dependencies.lazy_static]
+version = "1.4.0"
+features = ["spin_no_std"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
