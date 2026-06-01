@@ -1,0 +1,6 @@
+# Symbiot OS builds on Rust nightly (bare-metal, build-std, JSON target spec).
+# Verified building on nightly 2026-05-15. If a future nightly breaks the build,
+# pin an exact date here (e.g. channel = "nightly-2026-05-15").
+[toolchain]
+channel = "nightly"
+components = ["rust-src", "llvm-tools-preview"]

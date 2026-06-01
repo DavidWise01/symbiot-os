@@ -1,0 +1,45 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bootimage:
+    name: Build kernel + boot image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # rust-toolchain.toml selects nightly + rust-src + llvm-tools-preview.
+      # `rustup show` triggers the install before anything else runs.
+      - name: Provision toolchain
+        run: rustup show
+
+      - name: Cache cargo + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install bootimage
+        run: cargo install bootimage --version 0.10.4 --locked
+
+      - name: Build kernel (cargo build)
+        run: cargo build --verbose
+
+      - name: Build boot image (cargo bootimage)
+        run: cargo bootimage
+
+      - name: Upload boot image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootimage-symbiot-os
+          path: target/x86_64-symbiot/debug/bootimage-symbiot-os.bin
+          if-no-files-found: error

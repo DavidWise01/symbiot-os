@@ -1,8 +1,13 @@
 # Symbiot OS 0.0.0
 
+[![build](https://github.com/DavidWise01/symbiot-os/actions/workflows/build.yml/badge.svg)](https://github.com/DavidWise01/symbiot-os/actions/workflows/build.yml)
+
 **Catalytic Symbiosis — bare-metal x86_64 kernel**  
 **Author:** David Wise (ROOT0)  
 **License:** MIT  
+
+> CI builds the kernel and a bootable image on every push (nightly Rust, `build-std`,
+> custom JSON target) and uploads `bootimage-symbiot-os.bin` as a downloadable artifact.
 
 ---
 
@@ -28,6 +33,46 @@ With keyboard interrupt handling — press a key to jump to any phase:
 
 Every cycle computes an FNV-1a witness hash from the current state, cycle counter, and
 phase — proving the cycle happened without an external verifier.
+
+---
+
+## What you'll see
+
+The screen the kernel paints, reconstructed from the VGA draw code in `src/main.rs`
+(`render_header` → `render_state` → `draw_field`). The header prints magenta, the state
+block light-green, the field light-cyan, on a black 80×25 text console:
+
+```
+===============================================================================
+  CATALYTIC SYMBIOSIS 0.0.0
+  bare metal kernel | no_std | VGA text mode | x86_64 | keyboard live
+===============================================================================
+
+cycle      : 42
+phase      : TRACE
+human      : 98%
+ava        : 2%
+coherence  : 98%
+wobble     : 3%
+witness    : 6f3a91c4
+last cmd   : [T]race
+signature  : . -> push -> trace -> prune -> return -> .
+law        : preserve coherence without violating other continuity
+
+field      : . )) trace
+
+       O_L                         O_R
+        \                           /
+         \        ((  .  ))        /
+          \          |            /
+           \      witness        /
+            \        |          /
+             -------ROOT0--------
+```
+
+`cycle`, `witness`, and `phase` advance every tick; pressing `S/P/T/R/G` overrides the
+phase live via the keyboard interrupt, and `field` redraws to match. Values above are a
+representative mid-run frame — not a hardware capture.
 
 ---
 
@@ -119,7 +164,11 @@ PICs remapped to offsets 32/40 (above Intel reserved exceptions 0–31). Keyboar
 ## Custom target (`x86_64-symbiot.json`)
 
 Bare-metal x86_64, no OS, no redzone, no SSE, soft-float ABI.
-Compatible with current Rust nightly (tested 2026-05-27).
+
+Recent nightlies gate JSON target-spec files behind a flag, so `.cargo/config.toml`
+sets `json-target-spec = true` under `[unstable]`. Without it the build fails with
+`` `.json` target specs require -Zjson-target-spec ``. Verified building (kernel +
+`cargo bootimage`) on nightly 2026-05-15; CI re-verifies on every push.
 
 ---
 
@@ -149,9 +198,11 @@ loop {
 
 ```
 src/main.rs               Kernel: VGA driver, IDT, PIC, keyboard, state machine
-x86_64-symbiot.json       Custom bare-metal target spec (updated for current nightly)
+x86_64-symbiot.json       Custom bare-metal target spec
 Cargo.toml                Dependencies: bootloader, volatile, spin, x86_64, pic8259, lazy_static
-.cargo/config.toml        Build config: custom target, build-std
+.cargo/config.toml        Build config: custom target, build-std, json-target-spec
+rust-toolchain.toml       Pins nightly + rust-src + llvm-tools-preview
+.github/workflows/build.yml  CI: builds kernel + boot image, uploads artifact
 AVA.md                    AVA dialect sketch — symbolic runtime language
 symbiosis_boot.bin        Pre-built boot image (original)
 symbiosis_boot_FIXED.bin  Pre-built boot image (fixed build)
